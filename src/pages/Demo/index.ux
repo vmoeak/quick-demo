@@ -1,0 +1,193 @@
+<template>
+  <div class="tutorial-page">
+    <tabs onchange="onChangeTabIndex">
+      <tab-bar class="tab-bar">
+          <div for="{{tabHeadList}}" class="tab-bar-wraper">
+            <text class="{{currentIndex === $idx ? 'active-text' : ''}}">{{$item.title.slice(0,2)}}</text>
+            <div class="indicator {{currentIndex === $idx ? 'active' : ''}}"></div>
+          </div>
+      </tab-bar>
+      <tab-content class="tab-content">
+        <div class="tab-content-section" for="{{value in tabHeadList}}">
+          <block if="{{value.render}}">
+            <div for="{{value in tabContentList}}" class="item-wraper">
+                <div class="item-text">
+                  <text class='item-text-first'>{{value.title.slice(0,2)}}</text>
+                  <text class='item-text-title'>{{value.title.slice(2)}}</text>
+                  <text class="item-text-des">{{value.desc}}</text>
+                </div>
+                <img class="item-img" src='{{value.cover_img}}'/>
+            </div>
+            <div class="skeleton" if="{{isLoading}}">
+              <div class="skeleton-text">
+                <div class="skeleton-text-title"></div>
+                <div class="skeleton-text-des"></div>
+              </div>
+              <div class="skeleton-img">
+              </div>
+            </div>
+          </block>
+        </div>
+      </tab-content>
+    </tabs>
+  </div>
+</template>
+
+<style lang="scss">
+  .tutorial-page {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .tab-bar {
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .tab-bar-wraper {
+      flex-direction: column;
+    }
+    .tab-bar text{
+      text-align: center;
+      font-size: 34px;
+    }
+    .tab-bar .indicator {
+      width: 100%;
+      height: 10px;
+      margin-top: 10px;
+      background-color: #5f60ec;
+      border-radius: 2px;
+      visibility: hidden;
+    }
+    .tab-bar .active {
+      visibility: visible;
+    }
+    .tab-bar .active-text {
+      color: #5f60ec
+    }
+    .tab-content {
+      flex: 1;
+      .tab-content-section {
+        flex-direction: column;
+        margin: 10px;
+        background-color: #ffffff;
+        justify-content: center;
+        .item-wraper {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 0;
+          margin: 0 10px;
+          border-bottom: 2px solid #e2e8ed;                                                              
+          .item-text {
+            flex-direction: column;
+            width: 70%;
+            &-first {
+              font-size: 24px;
+            }
+            &-title {
+              font-weight: 700;
+            }
+            &-des {
+              margin-top: 10px;
+              font-size: 24px;
+              lines: 2;
+              text-overflow:ellipsis;
+            }
+          }
+          .item-img {
+            width: 150px;
+            height: 200px;
+          }
+        }
+        .skeleton {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 0;
+          margin: 0 10px;
+          border-bottom: 2px solid #e2e8ed;
+          &-text {
+            display: flex;
+            flex-direction: column;
+            &-title {
+              width: 40%;
+              height: 30px;
+              background-color: #e0e6ec;
+              border-radius: 10px;
+            }
+            &-des {
+              width: 80%;
+              height: 20px;
+              margin-top: 20px;
+              background-color: #e0e6ec;
+              border-radius: 8px;
+            }
+          }
+          &-img {
+            width: 150px;
+            height: 200px;
+            background-color: #e0e6ec
+          }
+        }
+      }
+    }
+  }
+</style>
+
+<script>
+  import apiUrl from '../../helper/apis/example.js'
+  export default {
+    private: {
+      tabHeadList: [
+        { title: '饮食与休闲', render: false },
+        { title: '艺术与娱乐', render: false },
+        { title: '健康', render: false },
+        { title: '教育与交流', render: false },
+        { title: '运动与保健', render: false },
+        { title: '旅行', render: false },
+        { title: '工作', render: false },
+        { title: '家居与园艺', render: false },
+      ],
+      tabContentList: [],
+      currentIndex: 0,
+      isLoading: false
+    },
+    onInit () {
+      this.$page.setTitleBar({ text: 'demo' })
+    },
+    onReady() {
+      this.getData({size: 10});
+    },
+    /**
+     * 修改列表中对应索引的数据项
+     * @param index
+     */
+    modifyListItemData (index) {
+      this.tabHeadList[index].render = true
+    },
+    /**
+     * 监听tabs组件index的改变，index默认为0
+     * @param evt
+     */
+    onChangeTabIndex (evt) {
+      this.currentIndex = evt.index
+      this.tabContentList = [];
+      this.getData({size: 10});
+      this.modifyListItemData(evt.index)
+    },
+    onReachBottom() {
+      getData({size: 10, offset:10})
+    },
+    getData (params) {
+      if (this.isLoading) return;
+      this.isLoading = true;
+      apiUrl.getApi(`categories/${this.tabHeadList[this.currentIndex].title}`, params)
+      .then(result => {
+        this.isLoading = false;
+        this.tabContentList = this.tabContentList.concat(result.list);
+      })
+      .catch(error => console.log(error))
+    }
+  }
+</script>
